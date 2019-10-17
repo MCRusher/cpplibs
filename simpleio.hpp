@@ -5,6 +5,9 @@
 #include <sstream>
 #include <limits>
 #include <type_traits>
+#include <algorithm>
+#include <cctype>
+#include <cwctype>
 
 namespace io {
     class ioex : public std::exception {
@@ -108,10 +111,18 @@ namespace io {
     }
     template<mode Mode, typename... Tx>
     void readln(bool& arg, Tx&... args){
+        auto eqnocase = [](std::string const& s1, std::string const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](char const c1, char const c2){
+                    return std::tolower(c1) == std::tolower(c2);
+                });
+        };
         std::string tmp;
         if constexpr(Mode == mode::THROW){
             std::getline(std::cin,tmp);
-            if(tmp!="true" && tmp!="false"){
+            if(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
                 std::ostringstream buf;
                 buf << "readln(std::cin,bool,...) failed for typeid \""
                 << typeid(arg).name()
@@ -120,13 +131,13 @@ namespace io {
                 << " other arguments remaining.";
                 throw ioex(buf.str());
             }
-            arg = (tmp=="true" ? true : false);
+            arg = (eqnocase(tmp,"true") ? true : false);
         }else{
             std::getline(std::cin,tmp);
-            while(tmp!="true" && tmp!="false"){
+            while(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
                 std::getline(std::cin,tmp);
             }
-            arg = (tmp=="true" ? true : false);
+            arg = (eqnocase(tmp,"true") ? true : false);
         }
 
         if constexpr(sizeof...(args)!=0)
@@ -162,10 +173,18 @@ namespace io {
     }
     template<mode Mode, typename... Tx>
     void readln(std::istream& istrm, bool& arg, Tx&... args){
+        auto eqnocase = [](std::string const& s1, std::string const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](char const c1, char const c2){
+                    return std::tolower(c1) == std::tolower(c2);
+                });
+        };
         std::string tmp;
         if constexpr(Mode == mode::THROW){
             std::getline(istrm,tmp);
-            if(tmp!="true" && tmp!="false"){
+            if(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
                 std::ostringstream buf;
                 buf << "readln(std::istream,bool,...) failed for typeid \""
                 << typeid(arg).name()
@@ -174,13 +193,13 @@ namespace io {
                 << " other arguments remaining.";
                 throw ioex(buf.str());
             }
-            arg = (tmp=="true" ? true : false);
+            arg = (eqnocase(tmp,"true") ? true : false);
         }else{
             std::getline(istrm,tmp);
-            while(tmp!="true" && tmp!="false"){
+            while(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
                 std::getline(istrm,tmp);
             }
-            arg = (tmp=="true" ? true : false);
+            arg = (eqnocase(tmp,"true") ? true : false);
         }
 
         if constexpr(sizeof...(args)!=0)
@@ -262,6 +281,45 @@ namespace io {
         else
             std::cin.ignore();
     }
+    template<mode Mode, typename... Tx>
+    void read(bool& arg, Tx&... args){
+        auto eqnocase = [](std::string const& s1, std::string const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](char const c1, char const c2){
+                    return std::tolower(c1) == std::tolower(c2);
+                });
+        };
+        std::string tmp;
+        if constexpr(Mode == mode::THROW){
+            std::cin >> tmp;
+            if(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                std::ostringstream buf;
+                buf << "read(std::cin,bool,...) failed for typeid \""
+                << typeid(arg).name()
+                << "\" with "
+                << sizeof...(args)
+                << " other arguments remaining.";
+                throw ioex(buf.str());
+            }
+            arg = (eqnocase(tmp,"true") ? true : false);
+        }else{
+            std::cin >> tmp;
+            while(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
+                //clears the entire line and resets stream state
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                std::cin >> tmp;
+            }
+            arg = (eqnocase(tmp,"true") ? true : false);
+        }
+        //the template recursive base case
+        if constexpr(sizeof...(args)!=0)
+            read<Mode>(args...);
+        else
+            std::cin.ignore();
+    }
     template<mode Mode, typename T1, typename... Tx>
     void read(std::istream& istrm, T1& arg, Tx&... args){
         if constexpr(Mode == mode::THROW){
@@ -284,6 +342,45 @@ namespace io {
                     istrm.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
                 }
             }
+        }
+        //the template recursive base case
+        if constexpr(sizeof...(args)!=0)
+            read<Mode>(istrm,args...);
+        else
+            istrm.ignore();
+    }
+    template<mode Mode, typename... Tx>
+    void read(std::istream& istrm, bool& arg, Tx&... args){
+        auto eqnocase = [](std::string const& s1, std::string const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](char const c1, char const c2){
+                    return std::tolower(c1) == std::tolower(c2);
+                });
+        };
+        std::string tmp;
+        if constexpr(Mode == mode::THROW){
+            istrm >> tmp;
+            if(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
+                istrm.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                std::ostringstream buf;
+                buf << "read(std::istream,bool,...) failed for typeid \""
+                << typeid(arg).name()
+                << "\" with "
+                << sizeof...(args)
+                << " other arguments remaining.";
+                throw ioex(buf.str());
+            }
+            arg = (eqnocase(tmp,"true") ? true : false);
+        }else{
+            istrm >> tmp;
+            while(!eqnocase(tmp,"true") && !eqnocase(tmp,"false")){
+                //clears the entire line and resets stream state
+                istrm.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                istrm >> tmp;
+            }
+            arg = (eqnocase(tmp,"true") ? true : false);
         }
         //the template recursive base case
         if constexpr(sizeof...(args)!=0)
@@ -351,6 +448,40 @@ namespace io {
         if constexpr(sizeof...(args)!=0)
             wreadln<Mode>(args...);
     }
+    template<mode Mode, typename... Tx>
+    void wreadln(bool& arg, Tx&... args){
+        auto weqnocase = [](std::wstring const& s1, std::wstring const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](wchar_t const c1, wchar_t const c2){
+                    return std::towlower(c1) == std::towlower(c2);
+                });
+        };
+        std::wstring tmp;
+        if constexpr(Mode == mode::THROW){
+            std::getline(std::wcin,tmp);
+            if(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                std::ostringstream buf;
+                buf << "wreadln(std::wistream,bool,...) failed for typeid \""
+                << typeid(arg).name()
+                << "\" with "
+                << sizeof...(args)
+                << " other arguments remaining.";
+                throw ioex(buf.str());
+            }
+            arg = (weqnocase(tmp,"true") ? true : false);
+        }else{
+            std::getline(std::wcin,tmp);
+            while(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                std::getline(std::wcin,tmp);
+            }
+            arg = (weqnocase(tmp,L"true") ? true : false);
+        }
+
+        if constexpr(sizeof...(args)!=0)
+            wreadln<Mode>(args...);
+    }
     template<mode Mode, typename T1, typename... Tx>
     void wreadln(std::wistream& wistrm, T1& arg, Tx&... args){
         std::wstring tmp;
@@ -379,7 +510,40 @@ namespace io {
         if constexpr(sizeof...(args)!=0)
             wreadln<Mode>(wistrm,args...);
     }
+    template<mode Mode, typename... Tx>
+    void wreadln(std::wistream& wistrm, bool& arg, Tx&... args){
+        auto weqnocase = [](std::wstring const& s1, std::wstring const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](wchar_t const c1, wchar_t const c2){
+                    return std::towlower(c1) == std::towlower(c2);
+                });
+        };
+        std::wstring tmp;
+        if constexpr(Mode == mode::THROW){
+            std::getline(wistrm,tmp);
+            if(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                std::ostringstream buf;
+                buf << "wreadln(std::wistream,bool,...) failed for typeid \""
+                << typeid(arg).name()
+                << "\" with "
+                << sizeof...(args)
+                << " other arguments remaining.";
+                throw ioex(buf.str());
+            }
+            arg = (weqnocase(tmp,"true") ? true : false);
+        }else{
+            std::getline(wistrm,tmp);
+            while(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                std::getline(wistrm,tmp);
+            }
+            arg = (weqnocase(tmp,L"true") ? true : false);
+        }
 
+        if constexpr(sizeof...(args)!=0)
+            wreadln<Mode>(wistrm,args...);
+    }
     template<typename T1, typename... Tx>
     std::enable_if_t<!std::is_base_of_v<std::wistream, T1>>
     wreadln(T1& arg, Tx&... args){
@@ -420,7 +584,7 @@ namespace io {
         std::wcin >> res;
         std::wcin.ignore();
     }
-    void read(std::wistream& wistrm, std::wstring& res){
+    void wread(std::wistream& wistrm, std::wstring& res){
         wistrm >> res;
         wistrm.ignore();
     }
@@ -455,6 +619,45 @@ namespace io {
         else
             std::wcin.ignore();
     }
+    template<mode Mode, typename... Tx>
+    void wread(bool& arg, Tx&... args){
+        auto weqnocase = [](std::wstring const& s1, std::wstring const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](wchar_t const c1, wchar_t const c2){
+                    return std::towlower(c1) == std::towlower(c2);
+                });
+        };
+        std::wstring tmp;
+        if constexpr(Mode == mode::THROW){
+            std::wcin >> tmp;
+            if(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                std::wcin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                std::ostringstream buf;
+                buf << "read(std::wistream,bool,...) failed for typeid \""
+                << typeid(arg).name()
+                << "\" with "
+                << sizeof...(args)
+                << " other arguments remaining.";
+                throw ioex(buf.str());
+            }
+            arg = (weqnocase(tmp,L"true") ? true : false);
+        }else{
+            std::wcin >> tmp;
+            while(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                //clears the entire line and resets stream state
+                std::wcin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                std::wcin >> tmp;
+            }
+            arg = (weqnocase(tmp,L"true") ? true : false);
+        }
+        //the template recursive base case
+        if constexpr(sizeof...(args)!=0)
+            wread<Mode>(args...);
+        else
+            std::wcin.ignore();
+    }
     template<mode Mode, typename T1, typename... Tx>
     void wread(std::wistream& wistrm, T1& arg, Tx&... args){
         if constexpr(Mode == mode::THROW){
@@ -477,6 +680,45 @@ namespace io {
                     wistrm.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
                 }
             }
+        }
+        //the template recursive base case
+        if constexpr(sizeof...(args)!=0)
+            wread<Mode>(wistrm,args...);
+        else
+            wistrm.ignore();
+    }
+    template<mode Mode, typename... Tx>
+    void wread(std::wistream& wistrm, bool& arg, Tx&... args){
+        auto weqnocase = [](std::wstring const& s1, std::wstring const& s2){
+            return std::equal(
+                s1.begin(),s1.end(),
+                s2.begin(),s2.end(),
+                [](wchar_t const c1, wchar_t const c2){
+                    return std::towlower(c1) == std::towlower(c2);
+                });
+        };
+        std::wstring tmp;
+        if constexpr(Mode == mode::THROW){
+            wistrm >> tmp;
+            if(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                wistrm.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                std::ostringstream buf;
+                buf << "read(std::wistream,bool,...) failed for typeid \""
+                << typeid(arg).name()
+                << "\" with "
+                << sizeof...(args)
+                << " other arguments remaining.";
+                throw ioex(buf.str());
+            }
+            arg = (weqnocase(tmp,L"true") ? true : false);
+        }else{
+            wistrm >> tmp;
+            while(!weqnocase(tmp,L"true") && !weqnocase(tmp,L"false")){
+                //clears the entire line and resets stream state
+                wistrm.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+                wistrm >> tmp;
+            }
+            arg = (weqnocase(tmp,L"true") ? true : false);
         }
         //the template recursive base case
         if constexpr(sizeof...(args)!=0)
