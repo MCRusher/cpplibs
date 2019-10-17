@@ -324,14 +324,13 @@ namespace mem {
         std::memcpy(arr,src,num);
     }
 
-    template <typename T>
     void* copy(void const * const arr){
         std::size_t num = size(arr);
-        T* tmp = (T*)std::malloc(num+sizeof(std::size_t));
+        void* tmp = std::malloc(num+sizeof(std::size_t));
         if(!tmp)
             throw memex("mem::copy<void*> failed");
         *((std::size_t*)tmp) = num;
-        tmp = (T*)(((std::size_t*)tmp)+1);
+        tmp = (void*)(((std::size_t*)tmp)+1);
         std::memcpy(tmp,arr,num);
         return tmp;
     }
